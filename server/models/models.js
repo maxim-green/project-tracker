@@ -12,10 +12,10 @@ const User = sequelize.define('user', {
 
 const Project = sequelize.define('project', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  key: { type: DataTypes.STRING, allowNull: false },
+  key: { type: DataTypes.STRING, allowNull: false, unique: true },
   title: { type: DataTypes.STRING, allowNull: false },
   description: { type: DataTypes.STRING },
-  iconUrl: { type: DataTypes.STRING },
+  icon: { type: DataTypes.STRING },
 });
 
 const Status = sequelize.define('status', {
