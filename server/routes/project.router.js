@@ -4,11 +4,12 @@ const projectController = require('../controllers/project.controller');
 const tagController = require('../controllers/tag.controller');
 const statusController = require('../controllers/status.controller');
 const issueController = require('../controllers/issue.controller');
+const authMiddleware = require('../middleware/authMiddleware');
 
-router.post('/', projectController.create);
-router.get('/:projectId', projectController.get);
-router.put('/:projectId', projectController.update);
-router.delete('/:projectId', projectController.delete);
+router.post('/', authMiddleware, projectController.create);
+router.get('/:projectId', authMiddleware, projectController.get);
+router.put('/:projectId', authMiddleware, projectController.update);
+router.delete('/:projectId', authMiddleware, projectController.delete);
 router.get('/:projectId/issue', projectController.getRelatedIssues);
 router.post('/:projectId/issue', issueController.create);
 router.get('/:projectId/status', projectController.getRelatedStatuses);
