@@ -137,7 +137,22 @@ class ProjectController {
 
   }
 
-  async getLeadUser(req, res) {
+  async getLeadUser(req, res, next) {
+    try {
+      const { projectId } = req.params;
+      const isMember = await ProjectMember.findOne(
+        { where: { projectId, userId: req.user.id } });
+      if (!isMember) {
+        return next(ApiError.forbidden('Only members can get members'));
+      }
+      const { lead } = await Project.findOne({
+        include: { model: User, as: 'lead', attributes: { exclude: ['password'] } },
+        where: { id: projectId }
+      });
+      res.json({ lead });
+    } catch (e) {
+      next(ApiError.internal(e.message));
+    }
   }
 
   async getMemberUsers(req, res, next) {
