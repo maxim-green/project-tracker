@@ -1,4 +1,4 @@
-const { Project, ProjectMember, User } = require('../models/models');
+const { Project, ProjectMember, User, Status, Tag } = require('../models/models');
 const ApiError = require('../error/ApiError');
 const uuid = require('uuid');
 const path = require('path');
@@ -80,9 +80,7 @@ class ProjectController {
       const filename = saveStaticFile(icon);
       const { projectId } = req.params;
 
-      const project = await Project.findOne({
-        where: { id: projectId },
-      });
+      const project = await Project.findOne({ where: { id: projectId }});
 
       if (!project) {
         return next(ApiError.badRequest('Project not exist'));
@@ -129,12 +127,34 @@ class ProjectController {
 
   }
 
-  async getRelatedStatuses(req, res) {
-
+  async getRelatedStatuses(req, res, next) {
+    const { projectId } = req.params;
+    const project = await Project.findOne({ where: { id: projectId } });
+    if (!project) {
+      return next(ApiError.badRequest('Project not exist'));
+    }
+    const isMember = await ProjectMember.findOne(
+      { where: { projectId, userId: req.user.id } });
+    if (!isMember) {
+      return next(ApiError.forbidden('Only members can get statuses'));
+    }
+    const statuses = await Status.findAll({where: {projectId}});
+    res.json(statuses)
   }
 
   async getRelatedTags(req, res) {
-
+    const { projectId } = req.params;
+    const project = await Project.findOne({ where: { id: projectId } });
+    if (!project) {
+      return next(ApiError.badRequest('Project not exist'));
+    }
+    const isMember = await ProjectMember.findOne(
+      { where: { projectId, userId: req.user.id } });
+    if (!isMember) {
+      return next(ApiError.forbidden('Only members can get tags'));
+    }
+    const tags = await Tag.findAll({where: {projectId}});
+    res.json(tags)
   }
 
   async getLeadUser(req, res, next) {
@@ -143,7 +163,7 @@ class ProjectController {
       const isMember = await ProjectMember.findOne(
         { where: { projectId, userId: req.user.id } });
       if (!isMember) {
-        return next(ApiError.forbidden('Only members can get members'));
+        return next(ApiError.forbidden('Only members can get lead user'));
       }
       const { lead } = await Project.findOne({
         include: { model: User, as: 'lead', attributes: { exclude: ['password'] } },

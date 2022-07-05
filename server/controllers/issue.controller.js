@@ -1,6 +1,5 @@
 class IssueController {
-  async create(req, res) {
-
+  async create(req, res, next) {
   }
   async get(req, res) {
 
