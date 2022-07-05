@@ -1,4 +1,4 @@
-const { Project, ProjectMember } = require('../models/models');
+const { Project, ProjectMember, User } = require('../models/models');
 const ApiError = require('../error/ApiError');
 const uuid = require('uuid');
 const path = require('path');
@@ -131,11 +131,32 @@ class ProjectController {
   }
 
   async getMemberUsers(req, res) {
-
   }
 
-  async addMemberUser(req, res) {
-
+  async addMemberUser(req, res, next) {
+    const { projectId, userId } = req.params;
+    const projectMember = await ProjectMember.findOne(
+      { where: { userId, projectId } });
+    if (projectMember) {
+      return next(ApiError.badRequest('Already a member'));
+    }
+    const project = await Project.findOne({ where: { id: projectId } });
+    if (!project) {
+      return next(ApiError.badRequest('Wrong project id'));
+    }
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+      return next(ApiError.badRequest('Wrong user id'));
+    }
+    const isLead = project.leadId === req.user.id;
+    if (!isLead) {
+      return next(ApiError.forbidden('Only lead user can add member to project'));
+    }
+    const resource = await ProjectMember.create({
+      userId: userId,
+      projectId: projectId
+    });
+    res.json({ resource });
   }
 }
 
