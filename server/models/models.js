@@ -65,7 +65,8 @@ Project.belongsTo(User,
   { as: 'defaultAssignee', foreignKey: 'defaultAssigneeId' });
 
 User.belongsToMany(Project, { through: ProjectMember, as: 'member' });
-Project.belongsToMany(User, { through: ProjectMember });
+Project.belongsToMany(User, { through: ProjectMember, as: 'member' });
+ProjectMember.belongsTo(User);
 
 User.hasMany(Issue, { as: 'reporter', foreignKey: 'reporterId' });
 Issue.belongsTo(User, { as: 'reporter', foreignKey: 'reporterId' });

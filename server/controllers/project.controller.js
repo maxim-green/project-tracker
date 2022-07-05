@@ -55,7 +55,9 @@ class ProjectController {
       if (!projectMember) {
         return next(ApiError.forbidden('Not a member of that project'));
       }
-      const project = await Project.findOne({ where: { id: projectId } });
+      const project = await Project.findOne({
+        where: { id: projectId }
+      });
       return res.json({ project });
     } catch (e) {
       next(ApiError.internal(e.message));
@@ -130,7 +132,18 @@ class ProjectController {
 
   }
 
-  async getMemberUsers(req, res) {
+  async getMemberUsers(req, res, next) {
+    const { projectId } = req.params;
+    const isMember = await ProjectMember.findOne(
+      { where: { projectId, userId: req.user.id } });
+    if (!isMember) {
+      return next(ApiError.forbidden('Only members can get members'));
+    }
+    const members = (await ProjectMember.findAll({
+      include: { model: User, attributes: {exclude: ['password']} },
+      where: { projectId }
+    })).map(item => item.user);
+    res.json({ members });
   }
 
   async addMemberUser(req, res, next) {
@@ -150,7 +163,8 @@ class ProjectController {
     }
     const isLead = project.leadId === req.user.id;
     if (!isLead) {
-      return next(ApiError.forbidden('Only lead user can add member to project'));
+      return next(
+        ApiError.forbidden('Only lead user can add member to project'));
     }
     const resource = await ProjectMember.create({
       userId: userId,

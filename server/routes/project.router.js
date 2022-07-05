@@ -17,7 +17,7 @@ router.post('/:projectId/status', statusController.create);
 router.get('/:projectId/tag', projectController.getRelatedTags);
 router.post('/:projectId/tag', tagController.create);
 router.get('/:projectId/lead', projectController.getLeadUser);
-router.get('/:projectId/member', projectController.getMemberUsers);
+router.get('/:projectId/member', authMiddleware, projectController.getMemberUsers);
 router.post('/:projectId/member/:userId', authMiddleware, projectController.addMemberUser);
 
 module.exports = router;
