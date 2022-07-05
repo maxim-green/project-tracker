@@ -56,7 +56,16 @@ class ProjectController {
         return next(ApiError.forbidden('Not a member of that project'));
       }
       const project = await Project.findOne({
-        where: { id: projectId }
+        where: { id: projectId },
+        include: [
+          { model: User, as: 'lead', attributes: { exclude: ['password'] } },
+          {
+            model: User,
+            as: 'defaultAssignee',
+            attributes: { exclude: ['password'] }
+          }
+        ],
+        attributes: { exclude: ['leadId', 'defaultAssigneeId'] }
       });
       return res.json({ project });
     } catch (e) {
@@ -129,48 +138,55 @@ class ProjectController {
   }
 
   async getLeadUser(req, res) {
-
   }
 
   async getMemberUsers(req, res, next) {
-    const { projectId } = req.params;
-    const isMember = await ProjectMember.findOne(
-      { where: { projectId, userId: req.user.id } });
-    if (!isMember) {
-      return next(ApiError.forbidden('Only members can get members'));
+    try {
+      const { projectId } = req.params;
+      const isMember = await ProjectMember.findOne(
+        { where: { projectId, userId: req.user.id } });
+      if (!isMember) {
+        return next(ApiError.forbidden('Only members can get members'));
+      }
+      const members = (await ProjectMember.findAll({
+        include: { model: User, attributes: { exclude: ['password'] } },
+        where: { projectId }
+      })).map(item => item.user);
+      res.json({ members });
+    } catch (e) {
+      next(ApiError.internal(e.message));
     }
-    const members = (await ProjectMember.findAll({
-      include: { model: User, attributes: {exclude: ['password']} },
-      where: { projectId }
-    })).map(item => item.user);
-    res.json({ members });
   }
 
   async addMemberUser(req, res, next) {
-    const { projectId, userId } = req.params;
-    const projectMember = await ProjectMember.findOne(
-      { where: { userId, projectId } });
-    if (projectMember) {
-      return next(ApiError.badRequest('Already a member'));
+    try {
+      const { projectId, userId } = req.params;
+      const projectMember = await ProjectMember.findOne(
+        { where: { userId, projectId } });
+      if (projectMember) {
+        return next(ApiError.badRequest('Already a member'));
+      }
+      const project = await Project.findOne({ where: { id: projectId } });
+      if (!project) {
+        return next(ApiError.badRequest('Wrong project id'));
+      }
+      const user = await User.findOne({ where: { id: userId } });
+      if (!user) {
+        return next(ApiError.badRequest('Wrong user id'));
+      }
+      const isLead = project.leadId === req.user.id;
+      if (!isLead) {
+        return next(
+          ApiError.forbidden('Only lead user can add member to project'));
+      }
+      const resource = await ProjectMember.create({
+        userId: userId,
+        projectId: projectId
+      });
+      res.json({ resource });
+    } catch (e) {
+      next(ApiError.internal(e.message));
     }
-    const project = await Project.findOne({ where: { id: projectId } });
-    if (!project) {
-      return next(ApiError.badRequest('Wrong project id'));
-    }
-    const user = await User.findOne({ where: { id: userId } });
-    if (!user) {
-      return next(ApiError.badRequest('Wrong user id'));
-    }
-    const isLead = project.leadId === req.user.id;
-    if (!isLead) {
-      return next(
-        ApiError.forbidden('Only lead user can add member to project'));
-    }
-    const resource = await ProjectMember.create({
-      userId: userId,
-      projectId: projectId
-    });
-    res.json({ resource });
   }
 }
 
