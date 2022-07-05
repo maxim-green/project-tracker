@@ -2,6 +2,21 @@ const { Project, ProjectMember } = require('../models/models');
 const ApiError = require('../error/ApiError');
 const uuid = require('uuid');
 const path = require('path');
+const fs = require('fs');
+
+const saveStaticFile = (file) => {
+  const extension = file.name.match(/\..+$/)[0];
+  let filename = uuid.v4() + extension;
+  file.mv(path.resolve(__dirname, '..', 'static', filename));
+  return filename;
+};
+
+const deleteStaticFile = (filename) => {
+  const filePath = path.resolve(__dirname, '..', 'static', filename);
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+  }
+};
 
 class ProjectController {
   async create(req, res, next) {
@@ -12,9 +27,7 @@ class ProjectController {
         return next(ApiError.badRequest('Project with that key already exist'));
       }
       const { icon } = req.files;
-      const extension = icon.name.match(/\..+$/)[0];
-      let filename = uuid.v4() + extension;
-      icon.mv(path.resolve(__dirname, '..', 'static', filename));
+      const filename = saveStaticFile(icon);
       const project = await Project.create({
         key,
         title,
@@ -42,7 +55,7 @@ class ProjectController {
       if (!projectMember) {
         return next(ApiError.forbidden('Not a member of that project'));
       }
-      const project = await Project.findOne({where: {id: projectId}})
+      const project = await Project.findOne({ where: { id: projectId } });
       return res.json({ project });
     } catch (e) {
       next(ApiError.internal(e.message));
@@ -50,28 +63,31 @@ class ProjectController {
   }
 
   async update(req, res, next) {
-    try { // todo: finish this logic
+    try {
       const { key, title, description, leadId, defaultAssigneeId } = req.body;
-      const testProject = await Project.findOne({ where: { key } });
-      if (testProject && (key !== testProject.key)) {
-          return next(ApiError.badRequest('Project with that key already exist'));
-      }
       const { icon } = req.files;
-      const extension = icon.name.match(/\..+$/)[0];
-      let filename = uuid.v4() + extension;
-      icon.mv(path.resolve(__dirname, '..', 'static', filename));
+      const filename = saveStaticFile(icon);
       const { projectId } = req.params;
+
       const project = await Project.findOne({
-        where: {id: projectId},
+        where: { id: projectId },
       });
+
       if (!project) {
         return next(ApiError.badRequest('Project not exist'));
+      }
+      const testKeyProject = await Project.findOne({ where: { key } });
+      if (testKeyProject && (key !== project.key)) {
+        return next(ApiError.badRequest('Project with that key already exist'));
       }
       const isLead = project.leadId === req.user.id;
       if (!isLead) {
         return next(ApiError.forbidden('Only lead user can edit project'));
       }
-      const updatedProject = await project.update({key, title, description, leadId, defaultAssigneeId, icon: filename})
+
+      deleteStaticFile(project.icon);
+      const updatedProject = await project.update(
+        { key, title, description, leadId, defaultAssigneeId, icon: filename });
       return res.json({ updatedProject });
     } catch (e) {
       next(ApiError.internal(e.message));
@@ -82,7 +98,7 @@ class ProjectController {
     try {
       const { projectId } = req.params;
       const project = await Project.findOne({
-        where: {id: projectId},
+        where: { id: projectId },
       });
       if (!project) {
         return next(ApiError.badRequest('Project not exist'));
