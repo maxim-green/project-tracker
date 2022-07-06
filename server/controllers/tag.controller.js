@@ -13,10 +13,6 @@ class TagController {
       if (!project) {
         return next(ApiError.badRequest('Project not exist'));
       }
-      const isLead = project.leadId === req.user.id;
-      if (!isLead) {
-        return next(ApiError.forbidden('Only lead user can delete project'));
-      }
       const testTitleTag = await Tag.findOne(
         { where: { title, projectId } });
       if (testTitleTag) {
