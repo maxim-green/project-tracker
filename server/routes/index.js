@@ -8,9 +8,10 @@ const tagRouter = require('./tag.router');
 const commentRouter = require('./comment.router');
 const reactionRouter = require('./reaction.router');
 const attachmentRouter = require('./attachment.router');
+const authMiddleware = require('../middleware/auth.middleware');
 
 router.use('/user', userRouter);
-router.use('/project', projectRouter);
+router.use('/project', authMiddleware, projectRouter);
 router.use('/status', statusRouter);
 router.use('/issue', issueRouter);
 router.use('/tag', tagRouter);

@@ -13,11 +13,6 @@ class StatusController {
       if (!project) {
         return next(ApiError.badRequest('Project not exist'));
       }
-      const isLead = project.leadId === req.user.id;
-      if (!isLead) {
-        return next(
-          ApiError.forbidden('Only lead user can add statuses to project'));
-      }
       const testTitleStatus = await Status.findOne(
         { where: { title, projectId } });
       if (testTitleStatus) {
