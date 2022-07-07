@@ -4,6 +4,9 @@ class IssueController {
   async get(req, res) {
 
   }
+  async getByProjectId(req, res) {
+
+  }
   async update(req, res) {
 
   }

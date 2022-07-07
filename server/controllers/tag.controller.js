@@ -28,6 +28,11 @@ class TagController {
   async get(req, res) {
 
   }
+  async getByProjectId(req, res) {
+    const { projectId } = req.params;
+    const tags = await Tag.findAll({where: {projectId}});
+    res.json(tags)
+  }
   async update(req, res) {
 
   }

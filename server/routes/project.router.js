@@ -10,6 +10,7 @@ const requireRolesMiddleware = require('../middleware/requireRoles.middleware');
 const projectExists = require('../validators/projectExists.validator');
 const projectKeyUnique = require('../validators/projectKeyUnique.validator');
 const userExists = require('../validators/userExists.validator');
+const userIsProjectMember = require('../validators/userIsProjectMember.validator');
 const validationHandlingMiddleware = require('../middleware/validationHandling.middleware');
 
 router.post('/',
@@ -47,12 +48,12 @@ router.delete('/:projectId',
   projectController.delete
 );
 
-router.get('/:projectId/issue', projectController.getRelatedIssues);
+router.get('/:projectId/issue', issueController.getByProjectId);
 router.post('/:projectId/issue', issueController.create);
 
 router.get('/:projectId/status',
   requireRolesMiddleware(['MEMBER']),
-  projectController.getRelatedStatuses
+  statusController.getByProjectId
 );
 
 router.post('/:projectId/status',
@@ -62,7 +63,7 @@ router.post('/:projectId/status',
 
 router.get('/:projectId/tag',
   requireRolesMiddleware(['MEMBER']),
-  projectController.getRelatedTags
+  tagController.getByProjectId
 );
 
 router.post('/:projectId/tag',
@@ -81,6 +82,8 @@ router.get('/:projectId/member',
 );
 
 router.post('/:projectId/member/:userId',
+  param('userId').isNumeric().custom(userExists).custom(userIsProjectMember),
+  validationHandlingMiddleware,
   requireRolesMiddleware(['LEAD']),
   projectController.addMemberUser
 );

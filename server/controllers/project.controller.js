@@ -1,4 +1,4 @@
-const { Project, ProjectMember, User, Status, Tag } = require('../models/models');
+const { Project, ProjectMember, User } = require('../models/models');
 const ApiError = require('../error/ApiError');
 const uuid = require('uuid');
 const path = require('path');
@@ -32,12 +32,14 @@ class ProjectController {
         description,
         icon: filename,
       });
+
       project.setLead(leadId || req.user.id);
       project.setDefaultAssignee(defaultAssigneeId || req.user.id);
       await ProjectMember.create({
         userId: req.user.id,
         projectId: project.id
       });
+
       res.json(project);
     } catch (e) {
       next(ApiError.internal(e.message));
@@ -75,9 +77,21 @@ class ProjectController {
       const { projectId } = req.params;
 
       const project = await Project.findOne({ where: { id: projectId }});
+
+      if (leadId) {
+        const projectMemberTest = await ProjectMember.findOne({where: {userId: leadId}});
+        if (!projectMemberTest) {
+          await ProjectMember.create({
+            userId: leadId,
+            projectId: project.id
+          });
+        }
+      }
+
       if (filename) deleteStaticFile(project.icon);
       const updatedProject = await project.update(
         { key, title, description, leadId, defaultAssigneeId, icon: filename });
+
       return res.json(updatedProject);
     } catch (e) {
       next(ApiError.internal(e.message));
@@ -94,30 +108,6 @@ class ProjectController {
     } catch (e) {
       next(ApiError.internal(e.message));
     }
-  }
-
-  async getRelatedIssues(req, res) {
-
-  }
-
-  async getRelatedStatuses(req, res, next) {
-    const { projectId } = req.params;
-    const project = await Project.findOne({ where: { id: projectId } });
-    if (!project) {
-      return next(ApiError.badRequest('Project not exist'));
-    }
-    const statuses = await Status.findAll({where: {projectId}});
-    res.json(statuses)
-  }
-
-  async getRelatedTags(req, res) {
-    const { projectId } = req.params;
-    const project = await Project.findOne({ where: { id: projectId } });
-    if (!project) {
-      return next(ApiError.badRequest('Project not exist'));
-    }
-    const tags = await Tag.findAll({where: {projectId}});
-    res.json(tags)
   }
 
   async getLeadUser(req, res, next) {
@@ -149,19 +139,6 @@ class ProjectController {
   async addMemberUser(req, res, next) {
     try {
       const { projectId, userId } = req.params;
-      const projectMember = await ProjectMember.findOne(
-        { where: { userId, projectId } });
-      if (projectMember) {
-        return next(ApiError.badRequest('Already a member'));
-      }
-      const project = await Project.findOne({ where: { id: projectId } });
-      if (!project) {
-        return next(ApiError.badRequest('Wrong project id'));
-      }
-      const user = await User.findOne({ where: { id: userId } });
-      if (!user) {
-        return next(ApiError.badRequest('Wrong user id'));
-      }
       const resource = await ProjectMember.create({
         userId: userId,
         projectId: projectId
