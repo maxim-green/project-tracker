@@ -1,5 +1,6 @@
 const ApiError = require('../error/ApiError');
 const { Issue, Project, Status } = require('../models/models');
+const { User } = require('../models/models');
 
 class IssueController {
   async create(req, res, next) {
@@ -37,8 +38,34 @@ class IssueController {
     }
   }
 
-  async get(req, res) {
+  async get(req, res, next) {
+    try {
+      const { issueId } = req.params;
 
+      const issue = await Issue.findOne({
+        where: { id: issueId },
+        include: [
+          { model: User,
+            as: 'assignee',
+            attributes: { exclude: ['password'] }
+          },
+          {
+            model: User,
+            as: 'reporter',
+            attributes: { exclude: ['password'] }
+          },
+          {
+            model: Status,
+            as: 'status',
+          }
+        ],
+        attributes: { exclude: ['reporterId', 'assigneeId', 'statusId'] }
+      });
+
+      return res.json({ issue });
+    } catch (e) {
+      next(ApiError.internal(e.message));
+    }
   }
 
   async getByProjectId(req, res) {
