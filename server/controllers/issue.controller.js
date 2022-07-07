@@ -15,9 +15,9 @@ class IssueController {
         reporterId,
       } = req.body;
 
-      const project = await Project.findOne({where: {id: projectId}});
-      const projectStatus = await Status.findOne({where: {projectId}});
-      const issuesCount = await Issue.count({where: {projectId}});
+      const project = await Project.findOne({ where: { id: projectId } });
+      const projectStatus = await Status.findOne({ where: { projectId } });
+      const issuesCount = await Issue.count({ where: { projectId } });
 
       const issue = await Issue.create({
         title,
@@ -42,7 +42,9 @@ class IssueController {
   }
 
   async getByProjectId(req, res) {
-
+    const { projectId } = req.params;
+    const issues = await Issue.findAll({ where: { projectId } });
+    res.json(issues);
   }
 
   async update(req, res) {

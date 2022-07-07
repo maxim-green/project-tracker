@@ -51,7 +51,10 @@ router.delete('/:projectId',
   projectController.delete
 );
 
-router.get('/:projectId/issue', issueController.getByProjectId);
+router.get('/:projectId/issue',
+  requireRolesMiddleware(['MEMBER']),
+  issueController.getByProjectId
+);
 
 router.post('/:projectId/issue',
   body('title').notEmpty(),
