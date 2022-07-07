@@ -13,6 +13,8 @@ const userExists = require('../validators/userExists.validator');
 const userIsProjectMember = require('../validators/userIsProjectMember.validator');
 const issueExists = require('../validators/issueExists.validator');
 const issueIsChildIssue = require('../validators/issueIsChildIssue.validator');
+const statusTitleUnique = require('../validators/statusTitleUnique.validator');
+const tagTitleUnique = require('../validators/tagTitleUnique.validator');
 const validationHandlingMiddleware = require('../middleware/validationHandling.middleware');
 const projectStatusExists = require('../validators/projectStatusExists.validator');
 
@@ -74,6 +76,8 @@ router.get('/:projectId/status',
 );
 
 router.post('/:projectId/status',
+  body('title').notEmpty().custom(statusTitleUnique),
+  validationHandlingMiddleware,
   requireRolesMiddleware(['LEAD']),
   statusController.create
 );
@@ -84,6 +88,8 @@ router.get('/:projectId/tag',
 );
 
 router.post('/:projectId/tag',
+  body('title').notEmpty().custom(tagTitleUnique),
+  validationHandlingMiddleware,
   requireRolesMiddleware(['LEAD']),
   tagController.create
 );
