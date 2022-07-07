@@ -13,10 +13,6 @@ class TagController {
       if (!project) {
         return next(ApiError.badRequest('Project not exist'));
       }
-      const isLead = project.leadId === req.user.id;
-      if (!isLead) {
-        return next(ApiError.forbidden('Only lead user can delete project'));
-      }
       const testTitleTag = await Tag.findOne(
         { where: { title, projectId } });
       if (testTitleTag) {
@@ -31,6 +27,11 @@ class TagController {
   }
   async get(req, res) {
 
+  }
+  async getByProjectId(req, res) {
+    const { projectId } = req.params;
+    const tags = await Tag.findAll({where: {projectId}});
+    res.json(tags)
   }
   async update(req, res) {
 

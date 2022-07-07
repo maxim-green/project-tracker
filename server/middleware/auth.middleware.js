@@ -12,6 +12,7 @@ module.exports = function (req, res, next) {
     }
     const decoded = jwt.verify(token, process.env.SECRET_KEY);
     req.user = decoded;
+    req.user.roles = ['USER'];
     next()
   } catch (e) {
     return next(ApiError.unauthorized('Not authorized.'))
