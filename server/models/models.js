@@ -25,7 +25,7 @@ const Status = sequelize.define('status', {
 
 const Issue = sequelize.define('issue', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  key: { type: DataTypes.STRING, allowNull: false },
+  key: { type: DataTypes.STRING, allowNull: true, unique: true },
   title: { type: DataTypes.STRING, allowNull: false },
   description: { type: DataTypes.STRING },
 });
@@ -93,7 +93,8 @@ Tag.belongsTo(Project);
 Status.hasMany(Issue);
 Issue.belongsTo(Status);
 
-Issue.hasMany(Issue, { as: 'parentIssue', foreignKey: 'parentIssueId' });
+Issue.hasMany(Issue, { foreignKey: 'parentIssueId' });
+Issue.belongsTo(Issue, { as: 'parentIssue', foreignKey: 'parentIssueId' });
 
 Issue.hasMany(Comment);
 Comment.belongsTo(Issue);
