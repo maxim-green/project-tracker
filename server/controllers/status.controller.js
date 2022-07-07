@@ -29,6 +29,12 @@ class StatusController {
   async get(req, res) {
   }
 
+  async getByProjectId(req, res) {
+    const { projectId } = req.params;
+    const statuses = await Status.findAll({where: {projectId}});
+    res.json(statuses)
+  }
+
   async update(req, res) {
 
   }
