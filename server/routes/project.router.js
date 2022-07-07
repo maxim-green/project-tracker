@@ -11,7 +11,10 @@ const projectExists = require('../validators/projectExists.validator');
 const projectKeyUnique = require('../validators/projectKeyUnique.validator');
 const userExists = require('../validators/userExists.validator');
 const userIsProjectMember = require('../validators/userIsProjectMember.validator');
+const issueExists = require('../validators/issueExists.validator');
+const issueIsChildIssue = require('../validators/issueIsChildIssue.validator');
 const validationHandlingMiddleware = require('../middleware/validationHandling.middleware');
+const projectStatusExists = require('../validators/projectStatusExists.validator');
 
 router.post('/',
   body('key').notEmpty().custom(projectKeyUnique),
@@ -49,7 +52,18 @@ router.delete('/:projectId',
 );
 
 router.get('/:projectId/issue', issueController.getByProjectId);
-router.post('/:projectId/issue', issueController.create);
+
+router.post('/:projectId/issue',
+  body('title').notEmpty(),
+  body('statusId').optional().isNumeric().custom(projectStatusExists),
+  body('assigneeId').optional().isNumeric().custom(userExists).custom(userIsProjectMember),
+  body('reporterId').optional().isNumeric().custom(userExists).custom(userIsProjectMember),
+  body('parentIssueId').optional().isNumeric().custom(issueExists).not().custom(issueIsChildIssue)
+    .withMessage('Cant add child issue to another child issue'),
+  validationHandlingMiddleware,
+  requireRolesMiddleware(['MEMBER']),
+  issueController.create
+);
 
 router.get('/:projectId/status',
   requireRolesMiddleware(['MEMBER']),
@@ -82,7 +96,8 @@ router.get('/:projectId/member',
 );
 
 router.post('/:projectId/member/:userId',
-  param('userId').isNumeric().custom(userExists).custom(userIsProjectMember),
+  param('userId').isNumeric().custom(userExists).not().custom(userIsProjectMember)
+    .withMessage('Already a member'),
   validationHandlingMiddleware,
   requireRolesMiddleware(['LEAD']),
   projectController.addMemberUser
