@@ -13,7 +13,7 @@ const authMiddleware = require('../middleware/auth.middleware');
 router.use('/user', userRouter);
 router.use('/project', authMiddleware, projectRouter);
 router.use('/status', statusRouter);
-router.use('/issue', issueRouter);
+router.use('/issue', authMiddleware, issueRouter);
 router.use('/tag', tagRouter);
 router.use('/comment', commentRouter);
 router.use('/reaction', reactionRouter);
