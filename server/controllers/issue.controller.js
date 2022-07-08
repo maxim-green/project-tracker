@@ -74,12 +74,38 @@ class IssueController {
     res.json(issues);
   }
 
-  async update(req, res) {
+  async update(req, res, next) {
+    try {
+      const {
+        title,
+        description,
+        statusId,
+        assigneeId,
+        reporterId,
+      } = req.body;
+      const {issueId} = req.params;
 
+      const issue = await Issue.findOne({ where: { id: issueId }});
+
+      const updatedIssue = await issue.update(
+        { title, description, statusId, assigneeId, reporterId });
+
+      res.json(updatedIssue);
+    } catch (e) {
+      return next(ApiError.internal(e.message));
+    }
   }
 
   async delete(req, res) {
-
+    try {
+      const {issueId} = req.params;
+      const issue = await Issue.destroy({
+        where: { id: issueId },
+      });
+      return res.json(issue);
+    } catch (e) {
+      next(ApiError.internal(e.message));
+    }
   }
 
   async getRelatedComments(req, res) {
