@@ -102,8 +102,9 @@ Comment.belongsTo(Issue);
 Issue.hasMany(Attachment);
 Attachment.belongsTo(Issue);
 
-Issue.belongsToMany(Tag, { through: IssueTag });
-Tag.belongsToMany(Issue, { through: IssueTag });
+Issue.belongsToMany(Tag, { through: IssueTag, as: 'tags' });
+Tag.belongsToMany(Issue, { through: IssueTag, as: 'issues' });
+IssueTag.belongsTo(Tag);
 
 Comment.hasMany(Reaction);
 Reaction.belongsTo(Comment);

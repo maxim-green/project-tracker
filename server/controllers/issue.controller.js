@@ -1,6 +1,5 @@
 const ApiError = require('../error/ApiError');
-const { Issue, Project, Status } = require('../models/models');
-const { User } = require('../models/models');
+const { Issue, Project, Status, IssueTag, User, Tag } = require('../models/models');
 
 class IssueController {
   async create(req, res, next) {
@@ -57,6 +56,12 @@ class IssueController {
           {
             model: Status,
             as: 'status',
+          },
+          {
+            model: Tag,
+            as: 'tags',
+            attributes: { exclude: ['projectId'] },
+            through: {attributes: []}
           }
         ],
         attributes: { exclude: ['reporterId', 'assigneeId', 'statusId'] }
@@ -108,20 +113,30 @@ class IssueController {
     }
   }
 
-  async getRelatedComments(req, res) {
-
-  }
-
-  async getRelatedTags(req, res) {
-
-  }
-
   async addTag(req, res) {
+    const {issueId, tagId} = req.params;
+    const { title } = req.body;
 
+    if (tagId) {
+      const issueTag = await IssueTag.create({issueId, tagId});
+      return res.json({issueTag});
+    }
+
+    if (title) {
+      res.json({issueId, title});
+    }
   }
 
-  async deleteTag(req, res) {
-
+  async deleteTag(req, res, next) {
+    try {
+      const {issueId, tagId} = req.params;
+      const deletedIssueTagCount = await IssueTag.destroy({
+        where: { tagId, issueId },
+      });
+      return res.json(deletedIssueTagCount);
+    } catch (e) {
+      next(ApiError.internal(e.message));
+    }
   }
 
   async getRelatedAttachments(req, res) {
