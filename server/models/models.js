@@ -8,7 +8,7 @@ const User = sequelize.define('user', {
   firstName: { type: DataTypes.STRING, allowNull: false },
   lastName: { type: DataTypes.STRING, allowNull: false },
   avatarUrl: { type: DataTypes.STRING }
-});
+}, {paranoid: true});
 
 const Project = sequelize.define('project', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -16,7 +16,7 @@ const Project = sequelize.define('project', {
   title: { type: DataTypes.STRING, allowNull: false },
   description: { type: DataTypes.STRING },
   icon: { type: DataTypes.STRING },
-});
+}, {paranoid: true});
 
 const Status = sequelize.define('status', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -28,7 +28,7 @@ const Issue = sequelize.define('issue', {
   key: { type: DataTypes.STRING, allowNull: true, unique: true },
   title: { type: DataTypes.STRING, allowNull: false },
   description: { type: DataTypes.STRING },
-});
+}, {paranoid: true});
 
 const Tag = sequelize.define('tag', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },

@@ -17,13 +17,13 @@ class IssueController {
 
       const project = await Project.findOne({ where: { id: projectId } });
       const projectStatus = await Status.findOne({ where: { projectId } });
-      const issuesCount = await Issue.count({ where: { projectId } });
+      const issuesCount = await Issue.count({ where: { projectId }, paranoid: false });
 
       const issue = await Issue.create({
         title,
         description,
       });
-      issue.key = `${project.key}-${issuesCount + 1}`;
+      issue.key = issuesCount + 1;
       issue.setProject(projectId);
       issue.setStatus(statusId || projectStatus.id);
       issue.setAssignee(assigneeId || project.defaultAssigneeId);
@@ -67,7 +67,7 @@ class IssueController {
         attributes: { exclude: ['reporterId', 'assigneeId', 'statusId'] }
       });
 
-      return res.json({ issue });
+      return res.json(issue);
     } catch (e) {
       next(ApiError.internal(e.message));
     }
