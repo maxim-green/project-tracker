@@ -1,4 +1,4 @@
-const { Comment } = require('../models/models');
+const { Comment, Reaction } = require('../models/models');
 
 class CommentController {
   async create(req, res) {
@@ -12,27 +12,27 @@ class CommentController {
     res.json({ comment });
   }
 
-  async get(req, res) {
-
-  }
-
   async getByIssueId(req, res) {
     const { issueId } = req.params;
     const comments = await Comment.findAll(
-      { where: { issueId }, attributes: { exclude: 'issueId' } });
+      { where: { issueId }, include: {model: Reaction, as: 'reactions'}, attributes: { exclude: 'issueId' } });
     res.json(comments);
   }
 
   async update(req, res) {
+    const {text} = req.body;
+    const {commentId} = req.params;
 
+    const comment = await Comment.findOne({where: {id: commentId}});
+    const updatedComment = await comment.update({text});
+
+    res.json(updatedComment)
   }
 
   async delete(req, res) {
-
-  }
-
-  async getRelatedReactions(req, res) {
-
+    const {commentId} = req.params;
+    const deletedCount = await Comment.destroy({where: { id: commentId }});
+    res.json(deletedCount);
   }
 }
 
