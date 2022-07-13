@@ -58,7 +58,8 @@ router.post('/:issueId/tag/:tagId',
 );
 
 router.post('/:issueId/tag',
-  body('title').notEmpty(),
+  body('title').notEmpty().not().custom(issueHaveTag)
+    .withMessage('Issue already have this tag.'),
   validationHandlingMiddleware,
   requireRolesMiddleware(['LEAD', 'REPORTER', 'ASSIGNEE']),
   issueController.addTag

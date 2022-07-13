@@ -13,7 +13,7 @@ router.use('/user', userRouter);
 router.use('/project', authMiddleware, projectRouter);
 router.use('/status', statusRouter);
 router.use('/issue', authMiddleware, issueRouter);
-router.use('/tag', tagRouter);
+router.use('/tag', authMiddleware, tagRouter);
 router.use('/comment', authMiddleware, commentRouter);
 router.use('/attachment', authMiddleware, attachmentRouter);
 

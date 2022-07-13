@@ -1,5 +1,6 @@
 const ApiError = require('../error/ApiError');
-const { Issue, Project, Status, IssueTag, User, Tag, Attachment } = require('../models/models');
+const { Issue, Project, Status, IssueTag, User, Tag, Attachment } = require(
+  '../models/models');
 const { saveStaticFile } = require('../utils/files');
 
 class IssueController {
@@ -14,11 +15,12 @@ class IssueController {
         assigneeId,
         reporterId,
       } = req.body;
-      let {attachments} = req.files || {};
+      let { attachments } = req.files || {};
 
       const project = await Project.findOne({ where: { id: projectId } });
       const projectStatus = await Status.findOne({ where: { projectId } });
-      const issuesCount = await Issue.count({ where: { projectId }, paranoid: false });
+      const issuesCount = await Issue.count(
+        { where: { projectId }, paranoid: false });
 
       const issue = await Issue.create({
         title,
@@ -34,14 +36,15 @@ class IssueController {
 
       let responseAttachments = [];
       if (attachments && !Array.isArray(attachments)) {
-        attachments = [attachments]
+        attachments = [attachments];
       }
       if (attachments && Array.isArray(attachments)) {
         for (let attachmentFile of attachments) {
           const fileUrl = await saveStaticFile(attachmentFile, 'attachment');
           responseAttachments.push(
-            await Attachment.create({userId: req.user.id, issueId: issue.id, fileUrl })
-          )
+            await Attachment.create(
+              { userId: req.user.id, issueId: issue.id, fileUrl })
+          );
         }
       }
 
@@ -58,7 +61,8 @@ class IssueController {
       const issue = await Issue.findOne({
         where: { id: issueId },
         include: [
-          { model: User,
+          {
+            model: User,
             as: 'assignee',
             attributes: { exclude: ['password'] }
           },
@@ -75,7 +79,7 @@ class IssueController {
             model: Tag,
             as: 'tags',
             attributes: { exclude: ['projectId'] },
-            through: {attributes: []}
+            through: { attributes: [] }
           }
         ],
         attributes: { exclude: ['reporterId', 'assigneeId', 'statusId'] }
@@ -102,9 +106,9 @@ class IssueController {
         assigneeId,
         reporterId,
       } = req.body;
-      const {issueId} = req.params;
+      const { issueId } = req.params;
 
-      const issue = await Issue.findOne({ where: { id: issueId }});
+      const issue = await Issue.findOne({ where: { id: issueId } });
 
       const updatedIssue = await issue.update(
         { title, description, statusId, assigneeId, reporterId });
@@ -117,7 +121,7 @@ class IssueController {
 
   async delete(req, res) {
     try {
-      const {issueId} = req.params;
+      const { issueId } = req.params;
       const issue = await Issue.destroy({
         where: { id: issueId },
       });
@@ -128,22 +132,28 @@ class IssueController {
   }
 
   async addTag(req, res) {
-    const {issueId, tagId} = req.params;
+    const { issueId, tagId } = req.params;
     const { title } = req.body;
 
     if (tagId) {
-      const issueTag = await IssueTag.create({issueId, tagId});
-      return res.json({issueTag});
+      const issueTag = await IssueTag.create({ issueId, tagId });
+      return res.json(issueTag);
     }
 
     if (title) {
-      res.json({issueId, title});
+      const issue = await Issue.findOne({ where: { id: issueId } });
+      let tag = await Tag.findOne({ where: { title } });
+      if (!tag) {
+        tag = await Tag.create({ title, projectId: issue.projectId, issueId });
+      }
+      const issueTag = await IssueTag.create({ issueId, tagId: tag.id });
+      res.json(issueTag);
     }
   }
 
   async deleteTag(req, res, next) {
     try {
-      const {issueId, tagId} = req.params;
+      const { issueId, tagId } = req.params;
       const deletedIssueTagCount = await IssueTag.destroy({
         where: { tagId, issueId },
       });
@@ -151,6 +161,15 @@ class IssueController {
     } catch (e) {
       next(ApiError.internal(e.message));
     }
+  }
+
+  async getByTagId(req, res) {
+    const { tagId } = req.params;
+    const issues = (await Tag.findAll({
+      where: { id: tagId },
+      include: {model: Issue, as: 'issues', through: { attributes: [] }}
+    })).map(tag => tag.issues);
+    res.json(issues);
   }
 }
 
