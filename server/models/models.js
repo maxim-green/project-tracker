@@ -47,7 +47,7 @@ const Reaction = sequelize.define('reaction', {
 
 const Attachment = sequelize.define('attachment', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
-  thumbnailUrl: { type: DataTypes.STRING, allowNull: false },
+  thumbnailUrl: { type: DataTypes.STRING },
   fileUrl: { type: DataTypes.STRING, allowNull: false },
 });
 

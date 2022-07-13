@@ -1,5 +1,6 @@
 const ApiError = require('../error/ApiError');
-const { Issue, Project, Status, IssueTag, User, Tag } = require('../models/models');
+const { Issue, Project, Status, IssueTag, User, Tag, Attachment } = require('../models/models');
+const { saveStaticFile } = require('../utils/files');
 
 class IssueController {
   async create(req, res, next) {
@@ -8,12 +9,12 @@ class IssueController {
       const {
         title,
         description,
-        attachments,
         parentIssueId,
         statusId,
         assigneeId,
         reporterId,
       } = req.body;
+      let {attachments} = req.files || {};
 
       const project = await Project.findOne({ where: { id: projectId } });
       const projectStatus = await Status.findOne({ where: { projectId } });
@@ -31,7 +32,20 @@ class IssueController {
       if (parentIssueId) issue.setParentIssue(parentIssueId);
       issue.save();
 
-      res.json(issue);
+      let responseAttachments = [];
+      if (attachments && !Array.isArray(attachments)) {
+        attachments = [attachments]
+      }
+      if (attachments && Array.isArray(attachments)) {
+        for (let attachmentFile of attachments) {
+          const fileUrl = await saveStaticFile(attachmentFile, 'attachment');
+          responseAttachments.push(
+            await Attachment.create({userId: req.user.id, issueId: issue.id, fileUrl })
+          )
+        }
+      }
+
+      res.json({ ...issue.dataValues, attachments: responseAttachments });
     } catch (e) {
       return next(ApiError.internal(e.message));
     }
@@ -137,10 +151,6 @@ class IssueController {
     } catch (e) {
       next(ApiError.internal(e.message));
     }
-  }
-
-  async getRelatedAttachments(req, res) {
-
   }
 }
 
