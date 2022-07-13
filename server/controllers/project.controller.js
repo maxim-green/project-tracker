@@ -1,23 +1,6 @@
 const { Project, ProjectMember, User } = require('../models/models');
 const ApiError = require('../error/ApiError');
-const uuid = require('uuid');
-const path = require('path');
-const fs = require('fs');
-
-const saveStaticFile = (file) => {
-  if (!file) return file
-  const extension = file.name.match(/\..+$/)[0];
-  let filename = uuid.v4() + extension;
-  file.mv(path.resolve(__dirname, '..', 'static', filename));
-  return filename;
-};
-
-const deleteStaticFile = (filename) => {
-  const filePath = path.resolve(__dirname, '..', 'static', filename);
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
-  }
-};
+const { saveStaticFile, deleteStaticFile } = require('../utils/files')
 
 class ProjectController {
   async create(req, res, next) {
@@ -25,7 +8,7 @@ class ProjectController {
       const { key, title, description, leadId, defaultAssigneeId } = req.body;
 
       const { icon } = req.files || {};
-      const filename = saveStaticFile(icon);
+      const filename = await saveStaticFile(icon, 'project-icon');
       const project = await Project.create({
         key,
         title,
@@ -73,7 +56,7 @@ class ProjectController {
     try {
       const { key, title, description, leadId, defaultAssigneeId } = req.body;
       const { icon } = req.files || {};
-      const filename = saveStaticFile(icon);
+      const filename = await saveStaticFile(icon, 'project-icon');
       const { projectId } = req.params;
 
       const project = await Project.findOne({ where: { id: projectId }});
@@ -88,7 +71,7 @@ class ProjectController {
         }
       }
 
-      if (filename) deleteStaticFile(project.icon);
+      if (filename) await deleteStaticFile(project.icon.slice(1));
       const updatedProject = await project.update(
         { key, title, description, leadId, defaultAssigneeId, icon: filename });
 

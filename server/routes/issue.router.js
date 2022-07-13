@@ -4,7 +4,7 @@ const issueController = require('../controllers/issue.controller');
 const commentController = require('../controllers/comment.controller');
 const attachmentController = require('../controllers/attachment.controller');
 const tagController = require('../controllers/tag.controller');
-const {param, body } = require('express-validator');
+const {param, body} = require('express-validator');
 const issueExists = require('../validators/issueExists.validator');
 const issueHaveTag = require('../validators/issueHaveTag.validator');
 const validationHandlingMiddleware = require(
@@ -19,6 +19,9 @@ const projectTagExists = require(
 const userExists = require('../validators/userExists.validator');
 const userIsProjectMember = require(
   '../validators/userIsProjectMember.validator');
+const fileProvided = require(
+  '../validators/fileProvided.validator'
+);
 
 router.use('/:issueId',
   param('issueId').isNumeric().custom(issueExists),
@@ -53,6 +56,7 @@ router.post('/:issueId/tag/:tagId',
   requireRolesMiddleware(['LEAD', 'REPORTER', 'ASSIGNEE']),
   issueController.addTag
 );
+
 router.post('/:issueId/tag',
   body('title').notEmpty(),
   validationHandlingMiddleware,
@@ -64,6 +68,7 @@ router.get('/:issueId/tag',
   requireRolesMiddleware(['MEMBER']),
   tagController.getByIssueId
 );
+
 router.delete('/:issueId/tag/:tagId',
   param('tagId').isNumeric().custom(issueHaveTag),
   validationHandlingMiddleware,
@@ -76,6 +81,7 @@ router.get('/:issueId/comment',
   requireRolesMiddleware(['MEMBER']),
   commentController.getByIssueId
 );
+
 router.post('/:issueId/comment',
   body('text').notEmpty(),
   validationHandlingMiddleware,
@@ -83,7 +89,17 @@ router.post('/:issueId/comment',
   commentController.create
 );
 
-router.get('/:issueId/attachment', issueController.getRelatedAttachments);
-router.post('/:issueId/attachment', attachmentController.create);
+router.post('/:issueId/attachment',
+  body('attachments').custom(fileProvided),
+  validationHandlingMiddleware,
+  requireRolesMiddleware(['MEMBER']),
+  attachmentController.create
+);
+
+router.get('/:issueId/attachment',
+  requireRolesMiddleware(['MEMBER']),
+  attachmentController.getByIssueId
+);
+
 
 module.exports = router;
