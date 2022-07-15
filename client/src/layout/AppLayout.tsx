@@ -1,77 +1,52 @@
-import React, { FC, PropsWithChildren, useState } from 'react';
-import { Layout, Menu, Row } from 'antd';
-import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+import React, { FC, PropsWithChildren } from 'react';
+import {
+  Layout, Menu, Row, Avatar, Space,
+} from 'antd';
+import { UserOutlined } from '@ant-design/icons';
+import { NavLink } from 'react-router-dom';
 import classes from './AppLayout.module.scss';
 
-const { Header, Sider, Content } = Layout;
+const { Header, Content } = Layout;
 
 interface IAppLayout {
 }
 
 const AppLayout: FC<PropsWithChildren<IAppLayout>> = ({ children }) => {
-  const [collapsed, setCollapsed] = useState(false);
+  const auth = true;
+  let menuItems;
+  if (auth) {
+    menuItems = [{ key: '1', label: 'Log out' }];
+  }
+  if (!auth) {
+    menuItems = [{ key: '1', label: <NavLink to="/login">Log in</NavLink> }, {
+      key: '2',
+      label: <NavLink to="/registration">Sign in</NavLink>,
+    }];
+  }
   return (
     <Layout>
       <Header>
-        <div className={classes.logo} />
-        <Row justify="end">
-          <Menu
-            theme="dark"
-            mode="horizontal"
-            selectable={false}
-            items={[{ key: '1', label: 'Log out' }]}
-          />
+        <NavLink to="/">
+          <div className={classes.logo} />
+        </NavLink>
+        <Row justify="end" align="middle">
+          <Space>
+            <Menu
+              theme="dark"
+              mode="horizontal"
+              selectable={false}
+              items={menuItems}
+            />
+            {auth && (
+              <NavLink to="/profile">
+                <Avatar icon={<UserOutlined />} />
+              </NavLink>
+            )}
+          </Space>
         </Row>
       </Header>
       <Content>
-        <Layout className={classes.main}>
-          <Sider
-            theme="light"
-            trigger={null}
-            collapsedWidth={48}
-            collapsible
-            collapsed={collapsed}
-          >
-            <Menu>
-              <Row justify="end">
-                <Menu.Item style={{ background: 'transparent' }}>
-                  {React.createElement(collapsed ? MenuUnfoldOutlined : MenuFoldOutlined, {
-                    className: 'trigger',
-                    onClick: () => setCollapsed(!collapsed),
-                  })}
-                </Menu.Item>
-              </Row>
-            </Menu>
-            <Menu
-              theme="light"
-              mode="inline"
-              defaultSelectedKeys={['1']}
-              items={[
-                {
-                  key: '1',
-                  label: 'Project 1',
-                },
-                {
-                  key: '2',
-                  label: 'App 2',
-                },
-                {
-                  key: '3',
-                  label: 'Hello world',
-                },
-              ]}
-            />
-          </Sider>
-          <Content
-            style={{
-              margin: '24px 16px',
-              padding: 24,
-              minHeight: 280,
-            }}
-          >
-            {children}
-          </Content>
-        </Layout>
+        {children}
       </Content>
     </Layout>
   );
