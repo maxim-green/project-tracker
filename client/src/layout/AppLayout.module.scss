@@ -1,0 +1,31 @@
+$header-height: 64px;
+
+.logo {
+  float: left;
+  width: 120px;
+  height: 31px;
+  margin: 16px 24px 16px 0;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.main {
+  min-height: calc(100vh - #{$header-height});
+}
+
+.siteLayoutBackground {
+  background: #fff;
+}
+
+.trigger {
+  padding: 0 24px;
+  font-size: 18px;
+  line-height: 64px;
+  cursor: pointer;
+  transition: color 0.3s;
+
+  &:hover {
+    color: #1890ff;
+  }
+}
+
+

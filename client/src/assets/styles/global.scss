@@ -1,0 +1,30 @@
+@import '~normalize.css';
+@import '~antd/dist/antd.css';
+@import 'fonts';
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Noto Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  font-style: normal;
+  color: black;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  text-decoration: none;
+  color: black;
+}
+
+.app {
+
+}
